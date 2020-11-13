@@ -170,7 +170,7 @@ typedef union {                            // Restricted by MISRA-C Rule 18.4 bu
     uint32_t spare28 : 1;                  // bit 28
     uint32_t spare29 : 1;                  // bit 29
     uint32_t spare30 : 1;                  // bit 30
-    uint32_t spare31 : 1;                  // bit 31
+    uint32_t enable_pid : 1;                  // bit 31
   };
 } SysBitfield5;
 
@@ -639,7 +639,14 @@ struct {
   uint16_t      shd_warmup_brightness;     // F5C
   uint8_t       shd_warmup_time;           // F5E
   
-  uint8_t       free_f5e[84];              // F5E - Decrement if adding new Setting variables just above and below
+  uint16_t       pid_sp;                    // F5B
+  uint16_t       pid_kp;                    // F5D
+  uint16_t       pid_ki;                    // F5F
+  uint16_t       pid_kd;                    // F61
+
+  //uint8_t       free_f5b[88];              // F5B - Decrement if adding new Setting variables just above and below
+  //uint8_t       free_f62[73];             // F63  Decrement if adding new Setting variables just above and below
+  uint8_t       free_f62[72];             // F63  Decrement if adding new Setting variables just above and below
 
   // Only 32 bit boundary variables below
   SysBitfield5  flag5;                     // FB4
