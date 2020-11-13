@@ -719,6 +719,9 @@ const char HTTP_FORM_OTHER[] PROGMEM =
   "<label><b>" D_WEB_ADMIN_PASSWORD "</b><input type='checkbox' onclick='sp(\"wp\")'></label><br><input id='wp' type='password' placeholder=\"" D_WEB_ADMIN_PASSWORD "\" value=\"" D_ASTERISK_PWD "\"><br>"
   "<br>"
   "<label><input id='b1' type='checkbox'%s><b>" D_MQTT_ENABLE "</b></label><br>"
+#ifdef USE_PID
+  "<label><input id='b3' type='checkbox'%s><b>PID</b></label><br>"
+#endif
   "<br>"
   "<label><b>" D_DEVICE_NAME "</b> (%s)</label><br><input id='dn' placeholder=\"\" value=\"%s\"><br>"
   "<br>";
@@ -2227,8 +2230,10 @@ void LoggingSaveSettings(void)
   Settings.syslog_port = (!strlen(tmp)) ? SYS_LOG_PORT : atoi(tmp);
   WebGetArg("lt", tmp, sizeof(tmp));
   Settings.tele_period = (!strlen(tmp)) ? TELE_PERIOD : atoi(tmp);
-  if ((Settings.tele_period > 0) && (Settings.tele_period < 10)) {
-    Settings.tele_period = 10;   // Do not allow periods < 10 seconds
+  // if ((Settings.tele_period > 0) && (Settings.tele_period < 10)) {
+  //   Settings.tele_period = 10;   // Do not allow periods < 10 seconds
+  if ((Settings.tele_period > 0) && (Settings.tele_period < 5)) {
+    Settings.tele_period = 5;   // Do not allow periods < 5 seconds
   }
   AddLog_P(LOG_LEVEL_INFO, PSTR(D_LOG_LOG D_CMND_SERIALLOG " %d, " D_CMND_WEBLOG " %d, " D_CMND_MQTTLOG " %d, " D_CMND_SYSLOG " %d, " D_CMND_LOGHOST " %s, " D_CMND_LOGPORT " %d, " D_CMND_TELEPERIOD " %d"),
     Settings.seriallog_level, Settings.weblog_level, Settings.mqttlog_level, Settings.syslog_level, SettingsText(SET_SYSLOG_HOST), Settings.syslog_port, Settings.tele_period);
@@ -2256,7 +2261,10 @@ void HandleOtherConfiguration(void)
   strlcpy(stemp, TasmotaGlobal.mqtt_data, sizeof(stemp));  // Get JSON template
   WSContentSend_P(HTTP_FORM_OTHER, stemp, (USER_MODULE == Settings.module) ? " checked disabled" : "",
     (Settings.flag.mqtt_enabled) ? " checked" : "",   // SetOption3 - Enable MQTT
-    SettingsText(SET_FRIENDLYNAME1), SettingsText(SET_DEVICENAME));
+#ifdef USE_PID
+    (Settings.flag5.enable_pid) ? " checked" : "",   // Enable PID
+#endif
+  SettingsText(SET_FRIENDLYNAME1), SettingsText(SET_DEVICENAME));
 
   uint32_t maxfn = (TasmotaGlobal.devices_present > MAX_FRIENDLYNAMES) ? MAX_FRIENDLYNAMES : (!TasmotaGlobal.devices_present) ? 1 : TasmotaGlobal.devices_present;
 #ifdef USE_SONOFF_IFAN
@@ -2311,6 +2319,9 @@ void OtherSaveSettings(void)
   WebGetArg("wp", tmp, sizeof(tmp));
   SettingsUpdateText(SET_WEBPWD, (!strlen(tmp)) ? "" : (strchr(tmp,'*')) ? SettingsText(SET_WEBPWD) : tmp);
   Settings.flag.mqtt_enabled = Webserver->hasArg("b1");  // SetOption3 - Enable MQTT
+#ifdef USE_PID
+  Settings.flag5.enable_pid = Webserver->hasArg("b3");  // Enable PID
+#endif
 #ifdef USE_EMULATION
   UdpDisconnect();
 #if defined(USE_EMULATION_WEMO) || defined(USE_EMULATION_HUE)
